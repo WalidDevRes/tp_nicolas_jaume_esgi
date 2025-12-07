@@ -1,0 +1,30 @@
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.7.4-debian
+    container_name: crowdsec
+    restart: unless-stopped
+    ports:
+      - 8181:8080  # API HTTP pour les bouncers
+      - 6060:6060  # Métriques Prometheus
+    expose:
+      - 8080   # API HTTP pour les bouncers
+      - 6060   # Métriques Prometheus
+    volumes:
+      # CrowdSec - Data et config
+      - ./data:/var/lib/crowdsec/data
+      - ./etc:/etc/crowdsec
+#      - ./etc/victoriametrics.yaml:/etc/crowdsec/victoriametrics.yaml:ro
+      # Journaux à analyser
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - /var/log/syslog:/var/log/syslog:ro
+      - /opt/docker-compose/traefik/logs:/var/log/traefik:ro
+    environment:
+      - GID=1000
+      - COLLECTIONS=crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd crowdsecurity/linux
+      - CUSTOM_HOSTNAME=myserver.mydomain.local
+    networks:
+      - traefik-prod-1
+
+networks:
+  traefik-prod-1:
+    external: true
