@@ -1,0 +1,44 @@
+server:
+  host: "0.0.0.0"
+  port: 4000
+  api_key: ${LITELLM_API_BASE}
+  enable_œ: true
+
+router:
+  strategies:
+    - type: "quality"
+      models:
+        - mistral
+        - gpt-oss
+        - deepseek
+    - type: "fallback"
+      models:
+        - deepseek
+        - gpt-oss
+        - mistral
+  rules:
+    - match: "code|python|javascript|bug|programme"
+      model: deepseek
+    - match: "physique|math|chimie|calcul|science"
+      model: gpt-oss
+    - match: "bonjour|salut|conversation|question simple"
+      model: mistral
+
+model_list:
+  - model_name: deepseek
+    litellm_params:
+      model: ollama/deepseek-r1:latest
+      api_base: http://10.0.0.52:11434
+      temperature: 0.3
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral:latest
+      api_base: http://10.0.0.52:11434
+      temperature: 0.2
+
+  - model_name: gpt-oss
+    litellm_params:
+      model: ollama/gpt-oss:latest
+      api_base: http://10.0.0.52:11434
+      temperature: 0.2
