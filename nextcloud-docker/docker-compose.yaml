@@ -1,0 +1,96 @@
+version: "3.8"
+
+services:
+  nextcloud_db:
+    image: mariadb
+    container_name: nextcloud-db-prod
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=$NEXTCLOUD_MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE=$NEXTCLOUD_MYSQL_DATABASE
+      - MYSQL_USER=$NEXTCLOUD_MYSQL_USER
+      - MYSQL_PASSWORD=$NEXTCLOUD_MYSQL_PASSWORD
+    networks:
+      - traefik-prod-1
+
+  nextcloud_app:
+    image: nextcloud
+    container_name: nextcloud-app-prod
+    restart: always
+    links:
+      - nextcloud_db
+    volumes:
+      - ./data:/var/www/html
+    environment:
+      - MYSQL_HOST=nextcloud_db
+      - MYSQL_DATABASE=$NEXTCLOUD_MYSQL_DATABASE
+      - MYSQL_USER=$NEXTCLOUD_MYSQL_USER
+      - MYSQL_PASSWORD=$NEXTCLOUD_MYSQL_PASSWORD
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.nextcloud-app-prod.loadbalancer.server.port=80"
+      - "traefik.http.routers.nextcloud-http.rule=Host(`nextcloud.homelabwalid.uk`)"
+      - "traefik.http.routers.nextcloud-https.rule=Host(`nextcloud.homelabwalid.uk`)"
+      - "traefik.http.routers.nextcloud-https.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud-http.entrypoints=web"
+      - "traefik.http.routers.nextcloud-https.tls=true"
+      - "traefik.http.routers.nextcloud-https.tls.certresolver=production"
+      - "traefik.http.routers.nextcloud-https.tls.domains[0].main=nextcloud.homelabwalid.uk"
+      - "traefik.http.routers.nextcloud-https.tls.domains[0].sans=*.nextcloud.homelabwalid.uk"
+      - "traefik.http.routers.nextcloud-https.middlewares=crowdsec@file"
+    networks:
+      - traefik-prod-1
+
+  app:
+    container_name: app-server
+    image: nextcloud:fpm
+    restart: always
+    expose:
+      - '80'
+      - '9000'
+    volumes:
+      - app_data:/var/www/html
+    networks:
+      - traefik-prod-1
+
+  collabora:
+    image: collabora/code
+    container_name: collabora
+    hostname: collabora
+    ports:
+      - 9980:9980
+    environment:
+      - domain=nextcloud\.homelabwalid\.uk
+      - username=username
+      - password=password
+      - "extra_params=--o:ssl.enable=false"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.collabora.loadbalancer.server.port=9980"
+      - "traefik.http.routers.collabora-http.rule=Host(`collabora.homelabwalid.uk`)"
+      - "traefik.http.routers.collabora-https.rule=Host(`collabora.homelabwalid.uk`)"
+      - "traefik.http.routers.collabora-https.entrypoints=websecure"
+      - "traefik.http.routers.collabora-http.entrypoints=web"
+      - "traefik.http.routers.collabora-https.tls=true"
+      - "traefik.http.routers.collabora-https.tls.certresolver=production"
+      - "traefik.http.routers.collabora-https.tls.domains[0].main=collabora.homelabwalid.uk"
+      - "traefik.http.routers.collabora-https.tls.domains[0].sans=*.collabora.homelabwalid.uk"
+    volumes:
+      - ./collabora:/config
+    cap_add:
+      - MKNOD
+    depends_on:
+      - nextcloud_app
+    restart: unless-stopped
+    networks:
+      - traefik-prod-1
+
+volumes:
+  app_data:
+
+networks:
+  traefik-prod-1:
+    external: true
