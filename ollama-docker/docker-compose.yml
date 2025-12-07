@@ -1,0 +1,88 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    ports:
+      - 8000:8000
+      - 5678:5678
+    volumes:
+      - .:/code
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: always
+    depends_on:
+      - ollama
+      - ollama-webui
+    networks:
+      - ollama-docker
+
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - 11434:11434 
+    volumes:
+      - .:/code
+      - ./ollama/ollama:/root/.ollama
+    pull_policy: always
+    tty: true
+    restart: always
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - ollama-docker
+
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ollama-webui
+    volumes:
+      - ./ollama/ollama-webui:/app/backend/data
+    depends_on:
+      - ollama
+    ports:
+      - 8080:8080
+    environment:
+      - OLLAMA_BASE_URLS=http://host.docker.internal:11434
+      - ENV=dev
+      - WEBUI_AUTH=False
+      - WEBUI_NAME=valiantlynx AI
+      - WEBUI_URL=http://localhost:8080
+      - WEBUI_SECRET_KEY=t0p-s3cr3t
+      - NO_PROXY=host.docker.internal
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    networks:
+      - ollama-docker
+
+  litellm:
+    image: litellm/litellm:latest
+    container_name: litellm
+    env_file:
+      - .env
+    ports:
+      - 4000:4000 
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml"]
+    depends_on:
+      - ollama
+    restart: always
+    networks:
+      - ollama-docker
+    
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma-data:/chroma/.chroma/index
+    restart: unless-stopped
+
+networks:
+  ollama-docker:
+    external: true
+
+volumes:
+  chroma-data:
