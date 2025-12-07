@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+rule_files:
+  - 'alert.rules'
+
+
+  - job_name: 'crowdsec-exporter-prod'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['myserver.mydomain.local:6060']
