@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+  traefik:
+    image: traefik:v3.5.2
+    container_name: traefik-prod
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./config/conf/:/etc/traefik/conf/
+      - ./config/certs/:/etc/traefik/certs/
+      - ./logs:/logs:rw
+    environment:
+      CF_DNS_API_TOKEN: clé_api_cloudflare
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.traefik-prod-1.loadbalancer.server.port=8080"
+      - "traefik.http.routers.traefik-http.rule=Host(`traefik.mydomain.uk`)"
+      - "traefik.http.routers.traefik-https.rule=Host(`traefik.mydomain.uk`)"
+      - "traefik.http.routers.traefik-https.entrypoints=websecure"
+      - "traefik.http.routers.traefik-http.entrypoints=web"
+      - "traefik.http.routers.traefik-https.tls=true"
+      - "traefik.http.routers.traefik-https.tls.certresolver=production"
+      - "traefik.http.routers.traefik-https.tls.domains[0].main=traefik.mydomain.uk"
+      - "traefik.http.routers.traefik-https.tls.domains[0].sans=*.traefik.mydomain.uk"
+      - "traefik.http.routers.traefik-https.middlewares=authentik@file"
+      - "traefik.http.routers.traefik-https.middlewares=crowdsec@file"
+    networks:
+      - traefik-prod-1
+networks:
+  traefik-prod-1:
+    external: true
