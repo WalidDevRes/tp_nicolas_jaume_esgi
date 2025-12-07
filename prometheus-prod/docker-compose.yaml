@@ -1,0 +1,27 @@
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-prod
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--web.enable-lifecycle'
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.prometheus-prod.loadbalancer.server.port=9090"
+      - "traefik.http.routers.prometheus-http.rule=Host(`prometheus.mydomain.uk`)"
+      - "traefik.http.routers.prometheus-https.rule=Host(`prometheus.mydomain.uk`)"
+      - "traefik.http.routers.prometheus-https.entrypoints=websecure"
+      - "traefik.http.routers.prometheus-http.entrypoints=web"
+      - "traefik.http.routers.prometheus-https.tls=true"
+      - "traefik.http.routers.prometheus-https.tls.certresolver=production"
+      - "traefik.http.routers.prometheus-https.tls.domains[0].main=prometheus.mydomain.uk"
+      - "traefik.http.routers.prometheus-https.tls.domains[0].sans=*.prometheus.mydomain.uk"
+#      - "traefik.http.routers.prometheus-https.middlewares=authentik@file"
+      - "traefik.http.routers.prometheus-https.middlewares=crowdsec@file"
+    networks:
+      - traefik-prod-1
