@@ -1,0 +1,4 @@
+{
+  "model": "deepseek",
+  "messages": [{"role": "user", "content": "Explique moi la theorie de la relativité."}]
+}
