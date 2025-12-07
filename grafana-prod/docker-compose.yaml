@@ -1,0 +1,31 @@
+volumes:
+  grafana-data: {}
+
+services:
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-prod
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana.ini:/etc/grafana/grafana.ini
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.grafana-prod-1.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana-http.rule=Host(`grafana.mydomain.uk`)"
+      - "traefik.http.routers.grafana-https.rule=Host(`grafana.mydomain.uk`)"
+      - "traefik.http.routers.grafana-https.entrypoints=websecure"
+      - "traefik.http.routers.grafana-http.entrypoints=web"
+      - "traefik.http.routers.grafana-https.tls=true"
+      - "traefik.http.routers.grafana-https.tls.certresolver=production"
+      - "traefik.http.routers.grafana-https.tls.domains[0].main=grafana.mydomain.uk"
+      - "traefik.http.routers.grafana-https.tls.domains[0].sans=*.grafana.mydomain.uk"
+      - "traefik.http.routers.grafana-https.middlewares=authentik@file"
+      - "traefik.http.routers.grafana-https.middlewares=crowdsec@file"
+    networks:
+      - traefik-prod-1
+
+networks:
+  traefik-prod-1:
+    external: true
