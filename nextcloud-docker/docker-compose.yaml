@@ -56,35 +56,28 @@ services:
     networks:
       - traefik-prod-1
 
-  collabora:
-    image: collabora/code
-    container_name: collabora
-    hostname: collabora
-    ports:
-      - 9980:9980
+  onlyoffice-document-server:
+    image: onlyoffice/documentserver:latest
+    restart: always
     environment:
-      - domain=nextcloud\.homelabwalid\.uk
-      - username=username
-      - password=password
-      - "extra_params=--o:ssl.enable=false"
+      - JWT_ENABLED=true
+      #- JWT_HEADER=AuthorizationJWT
+      - JWT_SECRET=changeme
+    volumes:
+      - ./document_data:/var/www/onlyoffice/Data
+      - ./document_log:/var/log/onlyoffice
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.collabora.loadbalancer.server.port=9980"
-      - "traefik.http.routers.collabora-http.rule=Host(`collabora.homelabwalid.uk`)"
-      - "traefik.http.routers.collabora-https.rule=Host(`collabora.homelabwalid.uk`)"
-      - "traefik.http.routers.collabora-https.entrypoints=websecure"
-      - "traefik.http.routers.collabora-http.entrypoints=web"
-      - "traefik.http.routers.collabora-https.tls=true"
-      - "traefik.http.routers.collabora-https.tls.certresolver=production"
-      - "traefik.http.routers.collabora-https.tls.domains[0].main=collabora.homelabwalid.uk"
-      - "traefik.http.routers.collabora-https.tls.domains[0].sans=*.collabora.homelabwalid.uk"
-    volumes:
-      - ./collabora:/config
-    cap_add:
-      - MKNOD
-    depends_on:
-      - nextcloud_app
-    restart: unless-stopped
+      - "traefik.http.services.onlyoffice-prod-1.loadbalancer.server.port=80"
+      - "traefik.http.routers.onlyoffice-http.rule=Host(`onlyoffice.homelabwalid.uk`)"
+      - "traefik.http.routers.onlyoffice-https.rule=Host(`onlyoffice.homelabwalid.uk`)"
+      - "traefik.http.routers.onlyoffice-https.entrypoints=websecure"
+      - "traefik.http.routers.onlyoffice-http.entrypoints=web"
+      - "traefik.http.routers.onlyoffice-https.tls=true"
+      - "traefik.http.routers.onlyoffice-https.tls.certresolver=production"
+      - "traefik.http.routers.onlyoffice-https.tls.domains[0].main=onlyoffice.homelabwalid.uk"
+      - "traefik.http.routers.onlyoffice-https.tls.domains[0].sans=*.onlyoffice.homelabwalid.uk"
+      - "traefik.http.routers.onlyoffice-https.middlewares=onlyoffice-headers@file"
     networks:
       - traefik-prod-1
 
