@@ -6,7 +6,7 @@ services:
     container_name: authentik-db-prod-1
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-authentik}
-      - POSTGRES_PASSWORD=$${POSTGRES_PASSWORD:-Walid000@}
+      - POSTGRES_PASSWORD=$${POSTGRES_PASSWORD:-Password}
       - POSTGRES_DB=${POSTGRES_DB:-authentik}
       - TZ=${TZ:-UTC}
     healthcheck:
@@ -46,7 +46,7 @@ services:
       - AUTHENTIK_POSTGRESQL__HOST=authentik-db-prod-1
       - AUTHENTIK_POSTGRESQL__USER=${POSTGRES_USER:-authentik}
       - AUTHENTIK_POSTGRESQL__NAME=${POSTGRES_DB:-authentik}
-      - AUTHENTIK_POSTGRESQL__PASSWORD=$${POSTGRES_PASSWORD:-Walid000@}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=$${POSTGRES_PASSWORD:-Password000@}
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
       - AUTHENTIK_PROMETHEUS__ENABLED="true"
       - AUTHENTIK_PROMETHEUS__LISTEN="0.0.0.0:9300"
@@ -83,7 +83,7 @@ services:
       - AUTHENTIK_POSTGRESQL__HOST=authentik-db-prod-1
       - AUTHENTIK_POSTGRESQL__USER=${POSTGRES_USER:-authentik}
       - AUTHENTIK_POSTGRESQL__NAME=${POSTGRES_DB:-authentik}
-      - AUTHENTIK_POSTGRESQL__PASSWORD=$${POSTGRES_PASSWORD:-Walid000@}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=$${POSTGRES_PASSWORD:-Password000@}
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
     volumes:
       - ./media:/media
